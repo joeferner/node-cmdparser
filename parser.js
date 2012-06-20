@@ -195,7 +195,12 @@ function readNextWord(state) {
   if (state.str[state.strIdx] === '"') {
     state.strIdx++;
     while (state.strIdx < state.str.length && state.str[state.strIdx] !== '"') {
-      word += state.str[state.strIdx++];
+      if (state.str[state.strIdx] === '\\') {
+        state.strIdx++;
+        word += state.str[state.strIdx++];
+      } else {
+        word += state.str[state.strIdx++];
+      }
     }
     state.strIdx++;
   } else {
