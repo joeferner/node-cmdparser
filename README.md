@@ -3,6 +3,8 @@
 
 Command parser with support for completers.
 
+Made specifically to parse redis command syntax but can be used for other purposes as well.
+
 # Install
 
 ```bash

@@ -191,7 +191,6 @@ exports.redisTest = {
 
   "BLPOP parser": function (test) {
     var results = this.cmdparser.parse("BLPOP user:1 4");
-    console.log(results);
     test.deepEqual(results, 1);
 
     test.done();
