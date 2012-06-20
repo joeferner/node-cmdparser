@@ -72,4 +72,14 @@ exports.parserTest = {
     test.equal(results.params.param1, "val");
     test.done();
   },
+
+  "optional parameter literal string, match": function (test) {
+    var cmdparser = new CmdParser([
+      'test ["TEST"]'
+    ]);
+    var results = cmdparser.parse("test test");
+    test.equal(results.name, "test");
+    test.equal(results.params.TEST, true);
+    test.done();
+  }
 };

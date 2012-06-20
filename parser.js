@@ -45,14 +45,26 @@ function parseCommand(cmd) {
       if (cmdParameters[i] === '[') {
         i++;
         paramName = '';
-        while (cmdParameters[i] !== ']') {
-          paramName += cmdParameters[i++];
+        if (cmdParameters[i] === '"') {
+          i++;
+          while (cmdParameters[i] !== '"') {
+            paramName += cmdParameters[i++];
+          }
+          i += 2;
+          parts.push({
+            type: 'optionalParameterLiteral',
+            name: paramName
+          });
+        } else {
+          while (cmdParameters[i] !== ']') {
+            paramName += cmdParameters[i++];
+          }
+          i++;
+          parts.push({
+            type: 'optionalParameter',
+            name: paramName
+          });
         }
-        i++;
-        parts.push({
-          type: 'optionalParameter',
-          name: paramName
-        });
         continue;
       }
 
@@ -82,7 +94,7 @@ function parseCommand(cmd) {
 
         if (part.type === 'commandName') {
           for (i = 0; i < part.name.length; i++) {
-            if (part.name[i] === str[strIdx]) {
+            if (part.name[i].toLowerCase() === str[strIdx].toLowerCase()) {
               strIdx++;
               continue;
             }
@@ -111,6 +123,19 @@ function parseCommand(cmd) {
             strIdx++;
           }
           result.params[part.name] = val.length > 0 ? val : null;
+          skipWhitespace();
+          continue;
+        }
+
+        if (part.type === 'optionalParameterLiteral') {
+          for (i = 0; i < part.name.length; i++) {
+            if (part.name[i].toLowerCase() === str[strIdx].toLowerCase()) {
+              strIdx++;
+              continue;
+            }
+            return null;
+          }
+          result.params[part.name] = true;
           skipWhitespace();
           continue;
         }
