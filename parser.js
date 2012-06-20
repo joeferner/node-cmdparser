@@ -1,54 +1,70 @@
 'use strict';
 
+var async = require('async');
+
+var COMPLETING_ERROR = 'completeing';
+
 var CmdParser = module.exports = function (commands, completers) {
   this._commands = commands.map(parseCommand);
   this._completers = completers;
 };
 
-CmdParser.prototype.parse = function (str) {
+CmdParser.prototype.parse = function (str, callback) {
   var matches = [];
-  this._commands.forEach(function (cmd) {
-    var r = cmd.parse(str);
-    if (r) {
-      matches.push(r);
+  async.forEach(this._commands, function (cmd, cb) {
+    cmd.parse(str, function (err, r) {
+      if (r) {
+        matches.push(r);
+      }
+      cb();
+    });
+  }, function (err) {
+    if (err) {
+      return callback(err);
     }
+    if (matches.length === 0) {
+      return callback();
+    }
+    if (matches.length === 1) {
+      return callback(null, matches[0]);
+    }
+    return callback(new Error('Multiple matches [' + JSON.stringify(matches) + '] for string "' + str + '".'));
   });
-  if (matches.length === 0) {
-    return null;
-  }
-  if (matches.length === 1) {
-    return matches[0];
-  }
-  throw new Error('Multiple matches [' + JSON.stringify(matches) + '] for string "' + str + '".');
 };
 
-CmdParser.prototype.completer = function (str) {
+CmdParser.prototype.completer = function (str, callback) {
   var self = this;
   var matches = [];
-  this._commands.forEach(function (cmd) {
-    var r = cmd.completer(str, self._completers);
-    if (r) {
-      matches.push(r);
-    }
-  });
-  if (matches.length === 0) {
-    return null;
-  }
-  var bestPartial = matches[0].partial; // todo find a better way
-  var results = [
-    [],
-    bestPartial
-  ];
-  matches.forEach(function (m) {
-    if (m.partial.toLowerCase() === bestPartial.toLowerCase()) {
-      if (m.value instanceof Array) {
-        results[0] = results[0].concat(m.value);
-      } else {
-        results[0].push(m.value);
+  async.forEach(this._commands, function (cmd, cb) {
+    cmd.completer(str, self._completers, function (err, r) {
+      if (r) {
+        matches.push(r);
       }
+      cb();
+    });
+  }, function (err) {
+    if (err) {
+      return callback(err);
     }
+    if (matches.length === 0) {
+      return callback();
+    }
+    var bestPartial = matches[0].partial; // todo find a better way
+    var results = [
+      [],
+      bestPartial
+    ];
+    matches.forEach(function (m) {
+      if (m.partial.toLowerCase() === bestPartial.toLowerCase()) {
+        if (m.value instanceof Array) {
+          results[0] = results[0].concat(m.value);
+        } else {
+          results[0].push(m.value);
+        }
+      }
+    });
+    callback(null, results);
   });
-  return results;
 };
 
 function parseCommand(cmd) {
@@ -144,8 +160,9 @@ function parseCommand(cmd) {
     }
   }
 
-  function doParse(str) {
+  function doParse(str, callback) {
     var state = {
+      parsing: true,
       strIdx: 0,
       startStrIdx: 0,
       str: str,
@@ -156,11 +173,12 @@ function parseCommand(cmd) {
         params: {}
       }
     };
-    return parseAll(state, parts);
+    parseAll(state, parts, callback);
   }
 
-  function doCompleter(str, completers) {
+  function doCompleter(str, completers, callback) {
     var state = {
+      completing: true,
       completers: completers,
       strIdx: 0,
       startStrIdx: 0,
@@ -172,8 +190,9 @@ function parseCommand(cmd) {
         params: {}
       }
     };
-    parseAll(state, parts);
-    return state.completer;
+    parseAll(state, parts, function (err) {
+      callback(err, state.completer);
+    });
   }
 
   return {
@@ -224,76 +243,73 @@ function isEndOfString(state) {
   return state.str.length === state.strIdx;
 }
 
-function parseAll(state, parts) {
+function parseAll(state, parts, callback) {
   if (state.debug) {
     console.log('parts', state.cmd, JSON.stringify(parts, null, '  '));
   }
 
-  for (var partIdx = 0; partIdx < parts.length; partIdx++) {
-    var part = parts[partIdx];
-
+  async.forEachSeries(parts, function (part, callback) {
     if (part.op === 'commandName') {
-      if (parseCommandName(state, part)) {
-        continue;
-      }
+      return parseCommandName(state, part, callback);
     }
 
     if (part.op === 'requiredParameter') {
-      if (parseRequiredParameter(state, part)) {
-        continue;
-      }
+      return parseRequiredParameter(state, part, callback);
     }
 
     if (part.op === 'optionalParameters') {
-      if (parseOptionalParameters(state, part)) {
-        continue;
-      }
+      return parseOptionalParameters(state, part, callback);
     }
 
     if (part.op === 'literal') {
-      if (parseLiteral(state, part)) {
-        continue;
-      }
+      return parseLiteral(state, part, callback);
     }
 
     if (part.op === 'optionalParameterLiteralOr') {
-      if (parseOptionalParameterLiteralOr(state, part)) {
-        continue;
-      }
+      return parseOptionalParameterLiteralOr(state, part, callback);
     }
 
+    return callback(new Error("could not parse: " + JSON.stringify(state)));
+  }, function (err) {
+    if (err) {
+      return callback(err);
+    }
     if (state.debug) {
-      console.log('could not parse', state);
+      console.log('parseAll ok', JSON.stringify(state, null, '  '));
     }
-    return null;
-  }
-
-  if (state.debug) {
-    console.log('parseAll ok', JSON.stringify(state, null, '  '));
-  }
-  return state.result;
+    return callback(null, state.result);
+  });
 }
 
-function parseRequiredParameter(state, part) {
+function parseRequiredParameter(state, part, callback) {
   if (state.debug) {
     console.log('parseRequiredParameter', state, part);
   }
   var val = readNextWord(state);
   if (val.length === 0) {
-    return false;
+    return callback(null, false);
   }
-  if (state.completers && state.completers[part.name]) {
-    state.completer = {
-      partial: val,
-      value: state.completers[part.name](val)
-    };
-  }
+
   state.result.params[part.name] = val;
   skipWhitespace(state);
-  return true;
+
+  if (state.completers && state.completers[part.name]) {
+    state.completers[part.name](val, function (err, values) {
+      if (err) {
+        return callback(err);
+      }
+      state.completer = {
+        partial: val,
+        value: values
+      };
+      return callback(null, true);
+    });
+  } else {
+    return callback(null, true);
+  }
 }
 
-function parseCommandName(state, part) {
+function parseCommandName(state, part, callback) {
   if (state.debug) {
     console.log('parseCommandName', state, part);
   }
@@ -305,34 +321,48 @@ function parseCommandName(state, part) {
         value: part.name
       };
     }
-    return false;
+    if (state.parsing) {
+      return callback(new Error("Command name does not match. expected: " + part.name + ", found: " + word));
+    } else {
+      return callback(COMPLETING_ERROR);
+    }
   }
   state.result.name = part.name;
   skipWhitespace(state);
-  return true;
+  return callback();
 }
 
-function parseOptionalParameters(state, part) {
+function parseOptionalParameters(state, part, callback) {
   if (state.debug) {
     console.log('parseOptionalParameters', state, part);
   }
   if (part.repeat) {
     var saveResults = state.result;
     state.result = {params: {}};
-    while (parseAll(state, part.parts)) {
-      if (state.debug) {
-        console.log('repeat', state);
+    async.whilst(
+      function () { return !isEndOfString(state); },
+      function (cb) {
+        parseAll(state, part.parts, function (err) {
+          if (state.debug) {
+            console.log('repeat', state);
+          }
+          mergeResultsAsArrays(saveResults, state.result);
+          cb();
+        });
+      }, function (err) {
+        state.result = saveResults;
+        if (err) {
+          return callback(err);
+        }
+        callback();
       }
-      mergeResultsAsArrays(saveResults, state.result);
-    }
-    state.result = saveResults;
+    );
   } else {
-    parseAll(state, part.parts);
+    parseAll(state, part.parts, callback);
   }
-  return true;
 }
 
-function parseLiteral(state, part) {
+function parseLiteral(state, part, callback) {
   if (state.debug) {
     console.log('parseLiteral', state, part);
   }
@@ -352,14 +382,14 @@ function parseLiteral(state, part) {
     part.names.forEach(function (name) {
       state.result.params[name] = false;
     });
-    return false;
+    return callback(new Error("No values left in string"));
   }
 
   for (i = 0; i < part.names.length; i++) {
     if (word.toLowerCase() === part.names[i].toLowerCase()) {
       state.result.params[part.names[i]] = true;
       skipWhitespace(state);
-      return true;
+      return callback();
     }
   }
 
@@ -378,31 +408,38 @@ function parseLiteral(state, part) {
       };
     }
   }
-  return false;
+  if (state.parsing) {
+    return callback(new Error("Partial match"));
+  } else {
+    return callback(COMPLETING_ERROR);
+  }
 }
 
-function parseOptionalParameterLiteralOr(state, part) {
+function parseOptionalParameterLiteralOr(state, part, callback) {
   if (state.debug) {
     console.log('parseOptionalParameterLiteralOr', state, part);
   }
   var word = peekNextWord(state);
-  var result = false;
+  var match = null;
   for (var i = 0; i < part.parts.length; i++) {
     for (var n = 0; n < part.parts[i].parts[0].names.length; n++) {
       var literalValue = part.parts[i].parts[0].names[n];
       if (literalValue.toLowerCase() === word.toLowerCase()) {
-        if (state.debug) {
-          console.log('parseOptionalParameterLiteralOr match', part.parts[i]);
-        }
-        if (parseAll(state, part.parts[i].parts)) {
-          result = true;
-        }
+        match = part.parts[i];
       } else {
         state.result.params[literalValue] = false;
       }
     }
   }
-  return result;
+
+  if (match) {
+    if (state.debug) {
+      console.log('parseOptionalParameterLiteralOr match', part.parts[i]);
+    }
+    return parseAll(state, match.parts, callback)
+  } else {
+    return callback(new Error("No matches found"));
+  }
 }
 
 function mergeResultsAsArrays(dest, src) {

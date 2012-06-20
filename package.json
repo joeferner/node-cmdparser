@@ -2,7 +2,11 @@
   "author": "Joe Ferner <joe@fernsroth.com>",
   "name": "cmdparser",
   "description": "Command parser with support for completers.",
-  "keywords": ["parser", "command", "redis"],
+  "keywords": [
+    "parser",
+    "command",
+    "redis"
+  ],
   "version": "0.0.1",
   "repository": {
     "type": "git",
@@ -12,6 +16,7 @@
     "node": "*"
   },
   "dependencies": {
+    "async": "~0.1.22"
   },
   "devDependencies": {
     "nodeunit": "~0.7.4"

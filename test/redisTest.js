@@ -148,88 +148,99 @@ exports.redisTest = {
       "ZSCORE key member",
       "ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]"
     ], {
-      key: function (partial) {
-        return ['user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4']
+      key: function (partial, callback) {
+        var r = ['user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4']
           .filter(function (item) { return item.toLowerCase().indexOf(partial.toLowerCase()) === 0; });
+        callback(null, r);
       }
     });
     done();
   },
 
   "DEL completer": function (test) {
-    var results = this.cmdparser.completer("del user");
-    test.deepEqual(results, [
-      ["user:1", "user:2"],
-      "user"
-    ]);
-    test.done();
+    this.cmdparser.completer("del user", function (err, results) {
+      test.deepEqual(results, [
+        ["user:1", "user:2"],
+        "user"
+      ]);
+      test.done();
+    });
   },
 
   "CONFIG GET completer": function (test) {
-    var results = this.cmdparser.completer("CONFIG GE");
-    test.deepEqual(results, [
-      ["GET"],
-      "GE"
-    ]);
-    test.done();
+    this.cmdparser.completer("CONFIG GE", function (err, results) {
+      test.deepEqual(results, [
+        ["GET"],
+        "GE"
+      ]);
+      test.done();
+    });
   },
 
   "BLPOP completer": function (test) {
-    var results = this.cmdparser.completer("BLPOP user");
-    test.deepEqual(results, [
-      ["user:1", "user:2"],
-      "user"
-    ]);
+    this.cmdparser.completer("BLPOP user", function (err, results) {
+      test.deepEqual(results, [
+        ["user:1", "user:2"],
+        "user"
+      ]);
 
-    test.done();
+      test.done();
+    });
   },
 
   "BLPOP parser": function (test) {
-    var results = this.cmdparser.parse("BLPOP user:1 4");
-    test.deepEqual(results, {
-      name: 'BLPOP',
-      params: {
-        key: 'user:1',
-        timeout: 4
-      }
-    });
+    this.cmdparser.parse("BLPOP user:1 4", function (err, results) {
+      test.deepEqual(results, {
+        name: 'BLPOP',
+        params: {
+          key: 'user:1',
+          timeout: 4
+        }
+      });
 
-    test.done();
+      test.done();
+    });
   },
 
   "LINSERT completer": function (test) {
-    var results = this.cmdparser.completer("LINSERT user:1 ");
-    test.deepEqual(results, [
-      ["BEFORE", "AFTER"],
-      ""
-    ]);
+    this.cmdparser.completer("LINSERT user:1 ", function (err, results) {
+      test.equal(err, null);
+      test.deepEqual(results, [
+        ["BEFORE", "AFTER"],
+        ""
+      ]);
 
-    test.done();
+      test.done();
+    });
   },
 
   "LINSERT completer hint": function (test) {
-    var results = this.cmdparser.completer("LINSERT user:1 B");
-    test.deepEqual(results, [
-      ["BEFORE"],
-      "B"
-    ]);
+    this.cmdparser.completer("LINSERT user:1 B", function (err, results) {
+      test.equal(err, null);
+      test.deepEqual(results, [
+        ["BEFORE"],
+        "B"
+      ]);
 
-    test.done();
+      test.done();
+    });
   },
 
   "LINSERT parser": function (test) {
-    var results = this.cmdparser.parse("LINSERT user:1 BEFORE a b");
-    test.deepEqual(results, {
-      name: 'LINSERT',
-      params: {
-        key: 'user:1',
-        BEFORE: true,
-        AFTER: false,
-        pivot: 'a',
-        value: 'b'
-      }
-    });
+    this.cmdparser.parse("LINSERT user:1 BEFORE a b", function (err, results) {
+      test.equal(err, null);
+      test.deepEqual(results, {
+        name: 'LINSERT',
+        params: {
+          key: 'user:1',
+          BEFORE: true,
+          AFTER: false,
+          pivot: 'a',
+          value: 'b'
+        }
+      });
 
-    test.done();
+      test.done();
+    });
   }
 };
