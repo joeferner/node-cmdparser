@@ -186,7 +186,13 @@ exports.redisTest = {
 
   "BLPOP parser": function (test) {
     var results = this.cmdparser.parse("BLPOP user:1 4");
-    test.deepEqual(results, 1);
+    test.deepEqual(results, {
+      name: 'BLPOP',
+      params: {
+        key: 'user:1',
+        timeout: 4
+      }
+    });
 
     test.done();
   },
