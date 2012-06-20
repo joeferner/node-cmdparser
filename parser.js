@@ -52,6 +52,8 @@ CmdParser.prototype.completer = function (str) {
 };
 
 function parseCommand(cmd) {
+  var debug = false;
+
   var m = cmd.match(/^(.*?)\s(.*)/);
   var commandName;
   var parts = [];
@@ -81,7 +83,7 @@ function parseCommand(cmd) {
           if (name.toUpperCase() === name) {
             return {
               op: 'literal',
-              value: name
+              names: name.split('|')
             };
           }
 
@@ -110,7 +112,7 @@ function parseCommand(cmd) {
       if (paramName.toUpperCase() === paramName) {
         parts.push({
           op: 'literal',
-          value: paramName
+          names: paramName.split('|')
         });
       } else {
         parts.push({
@@ -148,7 +150,7 @@ function parseCommand(cmd) {
       startStrIdx: 0,
       str: str,
       cmd: cmd,
-      debug: false,
+      debug: debug,
       result: {
         name: null,
         params: {}
@@ -164,7 +166,7 @@ function parseCommand(cmd) {
       startStrIdx: 0,
       str: str,
       cmd: cmd,
-      debug: false,
+      debug: debug,
       result: {
         name: null,
         params: {}
@@ -334,24 +336,48 @@ function parseLiteral(state, part) {
   if (state.debug) {
     console.log('parseLiteral', state, part);
   }
-  var word = readNextWord(state);
-  if (!word) {
-    state.result.params[part.value] = false;
-    return false;
-  }
-  if (word.toLowerCase() === part.value.toLowerCase()) {
-    state.result.params[part.value] = true;
-    skipWhitespace(state);
-    return true;
+
+  var i;
+  for (i = 0; i < part.names.length; i++) {
+    state.result.params[part.names[i]] = false;
   }
 
-  if (part.value.toLowerCase().indexOf(word.toLowerCase()) === 0 && isEndOfString(state)) {
+  var word = readNextWord(state);
+  if (!word) {
     state.completer = {
       partial: word,
-      value: part.value
+      value: part.names
     };
+
+    part.names.forEach(function (name) {
+      state.result.params[name] = false;
+    });
+    return false;
   }
-  state.result.params[part.value] = false;
+
+  for (i = 0; i < part.names.length; i++) {
+    if (word.toLowerCase() === part.names[i].toLowerCase()) {
+      state.result.params[part.names[i]] = true;
+      skipWhitespace(state);
+      return true;
+    }
+  }
+
+  if (isEndOfString(state)) {
+    var matches = [];
+    for (i = 0; i < part.names.length; i++) {
+      if (part.names[i].toLowerCase().indexOf(word.toLowerCase()) === 0) {
+        matches.push(part.names[i]);
+      }
+    }
+
+    if (matches.length > 0) {
+      state.completer = {
+        partial: word,
+        value: matches
+      };
+    }
+  }
   return false;
 }
 
@@ -362,16 +388,18 @@ function parseOptionalParameterLiteralOr(state, part) {
   var word = peekNextWord(state);
   var result = false;
   for (var i = 0; i < part.parts.length; i++) {
-    var literalValue = part.parts[i].parts[0].value;
-    if (literalValue.toLowerCase() === word.toLowerCase()) {
-      if (state.debug) {
-        console.log('parseOptionalParameterLiteralOr match', part.parts[i]);
+    for (var n = 0; n < part.parts[i].parts[0].names.length; n++) {
+      var literalValue = part.parts[i].parts[0].names[n];
+      if (literalValue.toLowerCase() === word.toLowerCase()) {
+        if (state.debug) {
+          console.log('parseOptionalParameterLiteralOr match', part.parts[i]);
+        }
+        if (parseAll(state, part.parts[i].parts)) {
+          result = true;
+        }
+      } else {
+        state.result.params[literalValue] = false;
       }
-      if (parseAll(state, part.parts[i].parts)) {
-        result = true;
-      }
-    } else {
-      state.result.params[literalValue] = false;
     }
   }
   return result;

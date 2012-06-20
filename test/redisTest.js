@@ -201,9 +201,28 @@ exports.redisTest = {
     test.done();
   },
 
+  "LINSERT completer hint": function (test) {
+    var results = this.cmdparser.completer("LINSERT user:1 B");
+    test.deepEqual(results, [
+      ["BEFORE"],
+      "B"
+    ]);
+
+    test.done();
+  },
+
   "LINSERT parser": function (test) {
     var results = this.cmdparser.parse("LINSERT user:1 BEFORE a b");
-    test.deepEqual(results, 1);
+    test.deepEqual(results, {
+      name: 'LINSERT',
+      params: {
+        key: 'user:1',
+        BEFORE: true,
+        AFTER: false,
+        pivot: 'a',
+        value: 'b'
+      }
+    });
 
     test.done();
   }
