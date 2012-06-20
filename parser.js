@@ -18,6 +18,30 @@ CmdParser.prototype.parse = function (str) {
   throw new Error('Multiple matches [' + matches + '] for string "' + str + '".');
 };
 
+CmdParser.prototype.completer = function (str) {
+  var matches = [];
+  this._commands.forEach(function (cmd) {
+    var r = cmd.completer(str);
+    if (r) {
+      matches.push(r);
+    }
+  });
+  if (matches.length === 0) {
+    return null;
+  }
+  var bestPartial = matches[0].partial; // todo find a better way
+  var results = [
+    [],
+    bestPartial
+  ];
+  matches.forEach(function (m) {
+    if (m.partial.toLowerCase() === bestPartial.toLowerCase()) {
+      results[0].push(m.value);
+    }
+  });
+  return results;
+};
+
 function parseCommand(cmd) {
   var m = cmd.match(/^(.*?)\s(.*)/);
   var commandName;
@@ -125,8 +149,25 @@ function parseCommand(cmd) {
     return parseAll(state, parts);
   }
 
+  function doCompleter(str) {
+    var state = {
+      strIdx: 0,
+      startStrIdx: 0,
+      str: str,
+      cmd: cmd,
+      debug: true,
+      result: {
+        name: null,
+        params: {}
+      }
+    };
+    parseAll(state, parts);
+    return state.completer;
+  }
+
   return {
-    parse: doParse
+    parse: doParse,
+    completer: doCompleter
   };
 }
 
@@ -146,6 +187,10 @@ function readNextWord(state) {
     word += state.str[state.strIdx++];
   }
   return word;
+}
+
+function isEndOfString(state) {
+  return state.str.length === state.strIdx;
 }
 
 function peekNextWord(state) {
@@ -230,6 +275,12 @@ function parseCommandName(state, part) {
   }
   var word = readNextWord(state);
   if (word !== part.name) {
+    if (part.name.indexOf(word) === 0 && isEndOfString(state)) {
+      state.completer = {
+        partial: word,
+        value: part.name
+      };
+    }
     return false;
   }
   state.result.name = part.name;
