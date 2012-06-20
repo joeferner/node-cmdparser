@@ -73,6 +73,17 @@ exports.parserTest = {
     test.done();
   },
 
+  "optional parameter multivalue": function (test) {
+    var cmdparser = new CmdParser([
+      "test [param1 param2]"
+    ]);
+    var results = cmdparser.parse("test val1 val2");
+    test.equal(results.name, "test");
+    test.equal(results.params.param1, "val1");
+    test.equal(results.params.param2, "val2");
+    test.done();
+  },
+
   "optional parameter literal string, match": function (test) {
     var cmdparser = new CmdParser([
       'test ["TEST"]'
@@ -90,6 +101,28 @@ exports.parserTest = {
     var results = cmdparser.parse("test");
     test.equal(results.name, "test");
     test.equal(results.params.TEST, false);
+    test.done();
+  },
+
+  "multiple optional with literal string, first": function (test) {
+    var cmdparser = new CmdParser([
+      'test ["TEST1"] ["TEST2"]'
+    ]);
+    var results = cmdparser.parse("test test1");
+    test.equal(results.name, "test");
+    test.equal(results.params.TEST1, true);
+    test.equal(results.params.TEST2, false);
+    test.done();
+  },
+
+  "multiple optional with literal string, second": function (test) {
+    var cmdparser = new CmdParser([
+      'test ["TEST1"] ["TEST2"]'
+    ]);
+    var results = cmdparser.parse("test test2");
+    test.equal(results.name, "test");
+    test.equal(results.params.TEST1, false);
+    test.equal(results.params.TEST2, true);
     test.done();
   }
 };
