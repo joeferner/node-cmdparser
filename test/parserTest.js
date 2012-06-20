@@ -158,5 +158,15 @@ exports.parserTest = {
     test.equal(results.name, "test");
     test.equal(results.params.param1, null);
     test.done();
+  },
+
+  "quotes": function (test) {
+    var cmdparser = new CmdParser([
+      'test param1'
+    ]);
+    var results = cmdparser.parse('test "hello world"');
+    test.equal(results.name, "test");
+    test.equal(results.params.param1, "hello world");
+    test.done();
   }
 };

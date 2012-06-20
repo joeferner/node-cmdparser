@@ -5,16 +5,13 @@ var CmdParser = require('../parser');
 exports.redisTest = {
   setUp: function (done) {
     this.cmdparser = new CmdParser([
-      /*
       "APPEND key value",
       "AUTH password",
       "BGREWRITEAOF",
       "BGSAVE",
       "BITCOUNT key [start] [end]",
       "BITOP operation destkey key [key ...]",
-      */
       "BLPOP key [key ...] timeout",
-      /*
       "BRPOP key [key ...] timeout",
       "BRPOPLPUSH source destination timeout",
       "CONFIG GET parameter",
@@ -77,7 +74,7 @@ exports.redisTest = {
       "MSET key value [key value ...]",
       "MSETNX key value [key value ...]",
       "MULTI",
-      "OBJECT subcommand [arguments [arguments ...]]",
+      "OBJECT subcommand [arguments ...]",
       "PERSIST key",
       "PEXPIRE key milliseconds",
       "PEXPIREAT key milliseconds-timestamp",
@@ -86,7 +83,7 @@ exports.redisTest = {
       "PSUBSCRIBE pattern [pattern ...]",
       "PTTL key",
       "PUBLISH channel message",
-      "PUNSUBSCRIBE [pattern [pattern ...]]",
+      "PUNSUBSCRIBE [pattern ...]",
       "QUIT",
       "RANDOMKEY",
       "RENAME key newkey",
@@ -111,7 +108,7 @@ exports.redisTest = {
       "SETEX key seconds value",
       "SETNX key value",
       "SETRANGE key offset value",
-      "SHUTDOWN [NOSAVE] [SAVE]",
+      "SHUTDOWN [NOSAVE|SAVE]",
       "SINTER key [key ...]",
       "SINTERSTORE destination key [key ...]",
       "SISMEMBER key member",
@@ -131,7 +128,7 @@ exports.redisTest = {
       "TIME",
       "TTL key",
       "TYPE key",
-      "UNSUBSCRIBE [channel [channel ...]]",
+      "UNSUBSCRIBE [channel ...]",
       "UNWATCH",
       "WATCH key [key ...]",
       "ZADD key score member [score] [member]",
@@ -150,7 +147,6 @@ exports.redisTest = {
       "ZREVRANK key member",
       "ZSCORE key member",
       "ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]"
-      */
     ], {
       key: function (partial) {
         return ['user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4']
@@ -159,7 +155,7 @@ exports.redisTest = {
     });
     done();
   },
-/*
+
   "DEL completer": function (test) {
     var results = this.cmdparser.completer("del user");
     test.deepEqual(results, [
@@ -187,10 +183,26 @@ exports.redisTest = {
 
     test.done();
   },
- */
 
   "BLPOP parser": function (test) {
     var results = this.cmdparser.parse("BLPOP user:1 4");
+    test.deepEqual(results, 1);
+
+    test.done();
+  },
+
+  "LINSERT completer": function (test) {
+    var results = this.cmdparser.completer("LINSERT user:1 ");
+    test.deepEqual(results, [
+      ["BEFORE", "AFTER"],
+      ""
+    ]);
+
+    test.done();
+  },
+
+  "LINSERT parser": function (test) {
+    var results = this.cmdparser.parse("LINSERT user:1 BEFORE a b");
     test.deepEqual(results, 1);
 
     test.done();

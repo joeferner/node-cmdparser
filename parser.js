@@ -192,23 +192,29 @@ function skipWhitespace(state) {
 
 function readNextWord(state) {
   var word = '';
-  while (state.strIdx < state.str.length && !isWhitespace(state.str[state.strIdx])) {
-    word += state.str[state.strIdx++];
+  if (state.str[state.strIdx] === '"') {
+    state.strIdx++;
+    while (state.strIdx < state.str.length && state.str[state.strIdx] !== '"') {
+      word += state.str[state.strIdx++];
+    }
+    state.strIdx++;
+  } else {
+    while (state.strIdx < state.str.length && !isWhitespace(state.str[state.strIdx])) {
+      word += state.str[state.strIdx++];
+    }
   }
+  return word;
+}
+
+function peekNextWord(state) {
+  var saveStrIdx = state.strIdx;
+  var word = readNextWord(state);
+  state.strIdx = saveStrIdx;
   return word;
 }
 
 function isEndOfString(state) {
   return state.str.length === state.strIdx;
-}
-
-function peekNextWord(state) {
-  var word = '';
-  var i = state.strIdx;
-  while (i < state.str.length && !isWhitespace(state.str[i])) {
-    word += state.str[i++];
-  }
-  return word;
 }
 
 function parseAll(state, parts) {
@@ -265,11 +271,7 @@ function parseRequiredParameter(state, part) {
   if (state.debug) {
     console.log('parseRequiredParameter', state, part);
   }
-  var val = '';
-  while (!isWhitespace(state.str[state.strIdx]) && state.strIdx < state.str.length) {
-    val += state.str[state.strIdx];
-    state.strIdx++;
-  }
+  var val = readNextWord(state);
   if (val.length === 0) {
     return false;
   }
