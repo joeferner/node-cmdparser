@@ -81,5 +81,15 @@ exports.parserTest = {
     test.equal(results.name, "test");
     test.equal(results.params.TEST, true);
     test.done();
+  },
+
+  "optional parameter literal string, no match": function (test) {
+    var cmdparser = new CmdParser([
+      'test ["TEST"]'
+    ]);
+    var results = cmdparser.parse("test");
+    test.equal(results.name, "test");
+    test.equal(results.params.TEST, false);
+    test.done();
   }
 };

@@ -88,13 +88,14 @@ function parseCommand(cmd) {
         params: {}
       };
       var strIdx = 0;
+      var startStrIdx;
       var i;
       for (var partIdx = 0; partIdx < parts.length; partIdx++) {
         var part = parts[partIdx];
 
         if (part.type === 'commandName') {
           for (i = 0; i < part.name.length; i++) {
-            if (part.name[i].toLowerCase() === str[strIdx].toLowerCase()) {
+            if (strIdx < str.length && part.name[i].toLowerCase() === str[strIdx].toLowerCase()) {
               strIdx++;
               continue;
             }
@@ -128,14 +129,15 @@ function parseCommand(cmd) {
         }
 
         if (part.type === 'optionalParameterLiteral') {
-          for (i = 0; i < part.name.length; i++) {
+          startStrIdx = strIdx;
+          for (i = 0; strIdx < str.length && i < part.name.length; i++) {
             if (part.name[i].toLowerCase() === str[strIdx].toLowerCase()) {
               strIdx++;
               continue;
             }
             return null;
           }
-          result.params[part.name] = true;
+          result.params[part.name] = startStrIdx !== strIdx;
           skipWhitespace();
           continue;
         }
