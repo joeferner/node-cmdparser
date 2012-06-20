@@ -23,7 +23,7 @@ exports.parserTest = {
 
   "one required parameter": function (test) {
     var cmdparser = new CmdParser([
-      "test <param1>"
+      "test param1"
     ]);
     var results = cmdparser.parse("test val");
     test.equal(results.name, "test");
@@ -33,7 +33,7 @@ exports.parserTest = {
 
   "two required parameters": function (test) {
     var cmdparser = new CmdParser([
-      "test <param1> <param2>"
+      "test param1 param2"
     ]);
     var results = cmdparser.parse("test val1 val2");
     test.equal(results.name, "test");
@@ -44,7 +44,7 @@ exports.parserTest = {
 
   "ignore the whitespace": function (test) {
     var cmdparser = new CmdParser([
-      "test <param1> <param2>"
+      "test param1 param2"
     ]);
     var results = cmdparser.parse("test \t val1 \t val2");
     test.equal(results.name, "test");
@@ -86,7 +86,7 @@ exports.parserTest = {
 
   "optional parameter literal string, match": function (test) {
     var cmdparser = new CmdParser([
-      'test ["TEST"]'
+      'test [TEST]'
     ]);
     var results = cmdparser.parse("test test");
     test.equal(results.name, "test");
@@ -96,7 +96,7 @@ exports.parserTest = {
 
   "optional parameter literal string, no match": function (test) {
     var cmdparser = new CmdParser([
-      'test ["TEST"]'
+      'test [TEST]'
     ]);
     var results = cmdparser.parse("test");
     test.equal(results.name, "test");
@@ -106,7 +106,7 @@ exports.parserTest = {
 
   "multiple optional with literal string, first": function (test) {
     var cmdparser = new CmdParser([
-      'test ["TEST1"] ["TEST2"]'
+      'test [TEST1] [TEST2]'
     ]);
     var results = cmdparser.parse("test test1");
     test.equal(results.name, "test");
@@ -117,7 +117,7 @@ exports.parserTest = {
 
   "multiple optional with literal string, second": function (test) {
     var cmdparser = new CmdParser([
-      'test ["TEST1"] ["TEST2"]'
+      'test [TEST1] [TEST2]'
     ]);
     var results = cmdparser.parse("test test2");
     test.equal(results.name, "test");
@@ -128,7 +128,7 @@ exports.parserTest = {
 
   "multiple optional with literal string and params": function (test) {
     var cmdparser = new CmdParser([
-      'test ["TEST1" param1] ["TEST2" param2]'
+      'test [TEST1 param1] [TEST2 param2]'
     ]);
     var results = cmdparser.parse("test test1 val1");
     test.equal(results.name, "test");

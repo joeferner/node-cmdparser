@@ -59,20 +59,6 @@ function parseCommand(cmd) {
     parts.push({ op: 'commandName', name: commandName });
     var cmdParameters = m[2];
     for (i = 0; i < cmdParameters.length;) {
-      if (cmdParameters[i] === '<') {
-        i++;
-        paramName = '';
-        while (cmdParameters[i] !== '>') {
-          paramName += cmdParameters[i++];
-        }
-        i++;
-        parts.push({
-          op: 'requiredParameter',
-          name: paramName
-        });
-        continue;
-      }
-
       if (cmdParameters[i] === '[') {
         i++;
         paramName = '';
@@ -89,8 +75,7 @@ function parseCommand(cmd) {
         }
 
         subParts = subParts.map(function (name) {
-          if (name.indexOf('"') === 0) {
-            name = name.substring(1, name.length - 1);
+          if (name.toUpperCase() === name) {
             return {
               op: 'literal',
               value: name
@@ -115,7 +100,21 @@ function parseCommand(cmd) {
         continue;
       }
 
-      throw new Error('Invalid command "' + cmd + '"');
+      paramName = '';
+      while (i < cmdParameters.length && !isWhitespace(cmdParameters[i])) {
+        paramName += cmdParameters[i++];
+      }
+      if (paramName.toUpperCase() === paramName) {
+        parts.push({
+          op: 'literal',
+          value: paramName
+        });
+      } else {
+        parts.push({
+          op: 'requiredParameter',
+          name: paramName
+        });
+      }
     }
   } else {
     commandName = cmd;
@@ -287,8 +286,8 @@ function parseCommandName(state, part) {
     console.log('parseCommandName', state, part);
   }
   var word = readNextWord(state);
-  if (word !== part.name) {
-    if (part.name.indexOf(word) === 0 && isEndOfString(state)) {
+  if (word.toLowerCase() !== part.name.toLowerCase()) {
+    if (part.name.toLowerCase().indexOf(word.toLowerCase()) === 0 && isEndOfString(state)) {
       state.completer = {
         partial: word,
         value: part.name
@@ -334,6 +333,13 @@ function parseLiteral(state, part) {
     state.result.params[part.value] = true;
     skipWhitespace(state);
     return true;
+  }
+
+  if (part.value.toLowerCase().indexOf(word.toLowerCase()) === 0 && isEndOfString(state)) {
+    state.completer = {
+      partial: word,
+      value: part.value
+    };
   }
   state.result.params[part.value] = false;
   return false;

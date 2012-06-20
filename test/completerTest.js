@@ -39,10 +39,10 @@ exports.completerTest = {
 
   "one required parameter": function (test) {
     var cmdparser = new CmdParser([
-      "test <param1>"
+      "test param1"
     ], {
-      param1: function (str) {
-        return [str + "1", str + "2", str + "3"];
+      param1: function (partial) {
+        return [partial + "1", partial + "2", partial + "3"];
       }
     });
     var results = cmdparser.completer("test val");
@@ -51,5 +51,17 @@ exports.completerTest = {
       "val"
     ]);
     test.done();
-  }
+  },
+
+  "literal": function (test) {
+    var cmdparser = new CmdParser([
+      "test [TEST]"
+    ]);
+    var results = cmdparser.completer("test T");
+    test.deepEqual(results, [
+      ["TEST"],
+      "T"
+    ]);
+    test.done();
+  },
 };

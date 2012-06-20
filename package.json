@@ -1,6 +1,6 @@
 {
   "author": "Joe Ferner <joe@fernsroth.com>",
-  "name": "cmdparse",
+  "name": "cmdparser",
   "description": "Command parser with support for completers.",
   "version": "0.0.1",
   "repository": {
