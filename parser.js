@@ -1,7 +1,8 @@
 'use strict';
 
-var CmdParser = module.exports = function (commands) {
+var CmdParser = module.exports = function (commands, completers) {
   this._commands = commands.map(parseCommand);
+  this._completers = completers;
 };
 
 CmdParser.prototype.parse = function (str) {
@@ -19,9 +20,10 @@ CmdParser.prototype.parse = function (str) {
 };
 
 CmdParser.prototype.completer = function (str) {
+  var self = this;
   var matches = [];
   this._commands.forEach(function (cmd) {
-    var r = cmd.completer(str);
+    var r = cmd.completer(str, self._completers);
     if (r) {
       matches.push(r);
     }
@@ -36,7 +38,11 @@ CmdParser.prototype.completer = function (str) {
   ];
   matches.forEach(function (m) {
     if (m.partial.toLowerCase() === bestPartial.toLowerCase()) {
-      results[0].push(m.value);
+      if (m.value instanceof Array) {
+        results[0] = results[0].concat(m.value);
+      } else {
+        results[0].push(m.value);
+      }
     }
   });
   return results;
@@ -140,7 +146,7 @@ function parseCommand(cmd) {
       startStrIdx: 0,
       str: str,
       cmd: cmd,
-      debug: true,
+      debug: false,
       result: {
         name: null,
         params: {}
@@ -149,13 +155,14 @@ function parseCommand(cmd) {
     return parseAll(state, parts);
   }
 
-  function doCompleter(str) {
+  function doCompleter(str, completers) {
     var state = {
+      completers: completers,
       strIdx: 0,
       startStrIdx: 0,
       str: str,
       cmd: cmd,
-      debug: true,
+      debug: false,
       result: {
         name: null,
         params: {}
@@ -263,6 +270,12 @@ function parseRequiredParameter(state, part) {
   }
   if (val.length === 0) {
     return false;
+  }
+  if (state.completers && state.completers[part.name]) {
+    state.completer = {
+      partial: val,
+      value: state.completers[part.name](val)
+    };
   }
   state.result.params[part.name] = val;
   skipWhitespace(state);
