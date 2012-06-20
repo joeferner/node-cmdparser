@@ -5,13 +5,16 @@ var CmdParser = require('../parser');
 exports.redisTest = {
   setUp: function (done) {
     this.cmdparser = new CmdParser([
+      /*
       "APPEND key value",
       "AUTH password",
       "BGREWRITEAOF",
       "BGSAVE",
       "BITCOUNT key [start] [end]",
       "BITOP operation destkey key [key ...]",
+      */
       "BLPOP key [key ...] timeout",
+      /*
       "BRPOP key [key ...] timeout",
       "BRPOPLPUSH source destination timeout",
       "CONFIG GET parameter",
@@ -147,6 +150,7 @@ exports.redisTest = {
       "ZREVRANK key member",
       "ZSCORE key member",
       "ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]"
+      */
     ], {
       key: function (partial) {
         return ['user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4']
@@ -155,8 +159,8 @@ exports.redisTest = {
     });
     done();
   },
-
-  testDelCompleter: function (test) {
+/*
+  "DEL completer": function (test) {
     var results = this.cmdparser.completer("del user");
     test.deepEqual(results, [
       ["user:1", "user:2"],
@@ -165,12 +169,31 @@ exports.redisTest = {
     test.done();
   },
 
-  testConfigGetCompleter: function (test) {
+  "CONFIG GET completer": function (test) {
     var results = this.cmdparser.completer("CONFIG GE");
     test.deepEqual(results, [
       ["GET"],
       "GE"
     ]);
+    test.done();
+  },
+
+  "BLPOP completer": function (test) {
+    var results = this.cmdparser.completer("BLPOP user");
+    test.deepEqual(results, [
+      ["user:1", "user:2"],
+      "user"
+    ]);
+
+    test.done();
+  },
+ */
+
+  "BLPOP parser": function (test) {
+    var results = this.cmdparser.parse("BLPOP user:1 4");
+    console.log(results);
+    test.deepEqual(results, 1);
+
     test.done();
   }
 };

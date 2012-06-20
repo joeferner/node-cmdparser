@@ -8,7 +8,10 @@ var CmdParser = module.exports = function (commands, completers) {
 CmdParser.prototype.parse = function (str) {
   var matches = [];
   this._commands.forEach(function (cmd) {
-    matches.push(cmd.parse(str));
+    var r = cmd.parse(str);
+    if (r) {
+      matches.push(r);
+    }
   });
   if (matches.length === 0) {
     return null;
@@ -16,7 +19,7 @@ CmdParser.prototype.parse = function (str) {
   if (matches.length === 1) {
     return matches[0];
   }
-  throw new Error('Multiple matches [' + matches + '] for string "' + str + '".');
+  throw new Error('Multiple matches [' + JSON.stringify(matches) + '] for string "' + str + '".');
 };
 
 CmdParser.prototype.completer = function (str) {
