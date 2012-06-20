@@ -19,68 +19,111 @@ CmdParser.prototype.parse = function (str) {
 };
 
 function parseCommand(cmd) {
-  var m = cmd.match(/^(.*?)\s/);
-  var commandName = m ? m[1] : cmd;
+  var m = cmd.match(/^(.*?)\s(.*)/);
+  var commandName;
+  var parts = [];
+  var paramName;
+  if (m) {
+    commandName = m[1];
+    parts.push({ type: 'commandName', name: commandName });
+    var cmdParameters = m[2];
+    for (var i = 0; i < cmdParameters.length;) {
+      if (cmdParameters[i] === '<') {
+        i++;
+        paramName = '';
+        while (cmdParameters[i] !== '>') {
+          paramName += cmdParameters[i++];
+        }
+        i++;
+        parts.push({
+          type: 'requiredParameter',
+          name: paramName
+        });
+        continue;
+      }
+
+      if (cmdParameters[i] === '[') {
+        i++;
+        paramName = '';
+        while (cmdParameters[i] !== ']') {
+          paramName += cmdParameters[i++];
+        }
+        i++;
+        parts.push({
+          type: 'optionalParameter',
+          name: paramName
+        });
+        continue;
+      }
+
+      if (isWhitespace(cmdParameters[i])) {
+        i++;
+        continue;
+      }
+    }
+  } else {
+    commandName = cmd;
+    parts.push({ type: 'commandName', name: commandName });
+  }
+
+  //console.log(parts);
 
   return {
     parse: function (str) {
-      var paramName;
-      var paramValue;
+      var val;
       var result = {
-        name: commandName,
+        name: null,
         params: {}
       };
       var strIdx = 0;
-      for (var cmdIdx = 0; cmdIdx < cmd.length;) {
-        // parse required parameter
-        if (cmd[cmdIdx] === '<') {
-          cmdIdx++;
-          paramName = '';
-          while (cmd[cmdIdx] !== '>') {
-            paramName += cmd[cmdIdx++];
+      var i;
+      for (var partIdx = 0; partIdx < parts.length; partIdx++) {
+        var part = parts[partIdx];
+
+        if (part.type === 'commandName') {
+          for (i = 0; i < part.name.length; i++) {
+            if (part.name[i] === str[strIdx]) {
+              strIdx++;
+              continue;
+            }
+            return null;
           }
-          cmdIdx++;
-          paramValue = '';
-          while (!isWhitespace(str[strIdx]) && strIdx < str.length) {
-            paramValue += str[strIdx++];
-          }
-          result.params[paramName] = paramValue;
+          result.name = part.name;
+          skipWhitespace();
           continue;
         }
 
-        // parse optional parameter
-        if (cmd[cmdIdx] === '[') {
-          cmdIdx++;
-          var paramName = '';
-          while (cmd[cmdIdx] !== ']') {
-            paramName += cmd[cmdIdx++];
-          }
-          cmdIdx++;
-          paramValue = '';
+        if (part.type === 'requiredParameter') {
+          val = '';
           while (!isWhitespace(str[strIdx]) && strIdx < str.length) {
-            paramValue += str[strIdx++];
-          }
-          result.params[paramName] = paramValue;
-          continue;
-        }
-
-        if (cmd[cmdIdx] === ' ' && isWhitespace(str[strIdx])) {
-          cmdIdx++;
-          while (isWhitespace(str[strIdx])) {
+            val += str[strIdx];
             strIdx++;
           }
+          result.params[part.name] = val;
+          skipWhitespace();
           continue;
         }
 
-        // parse string match
-        if (str[strIdx] === cmd[cmdIdx]) {
-          cmdIdx++;
-          strIdx++;
+        if (part.type === 'optionalParameter') {
+          val = '';
+          while (!isWhitespace(str[strIdx]) && strIdx < str.length) {
+            val += str[strIdx];
+            strIdx++;
+          }
+          result.params[part.name] = val.length > 0 ? val : null;
+          skipWhitespace();
           continue;
         }
 
         return null;
       }
+
+      function skipWhitespace() {
+        while (isWhitespace(str[strIdx]) && strIdx < str.length) {
+          strIdx++;
+        }
+      }
+
       return result;
     }
   };
