@@ -1,0 +1,21 @@
+{
+  "author": "Joe Ferner <joe@fernsroth.com>",
+  "name": "cmdparse",
+  "description": "Command parser with support for completers.",
+  "version": "0.0.1",
+  "repository": {
+    "url": ""
+  },
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "nodeunit": "~0.7.4"
+  },
+  "scripts": {
+    "test": "nodeunit test"
+  },
+  "main": "./parser.js"
+}
