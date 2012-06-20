@@ -2,16 +2,19 @@
 
 var CmdParser = require('../parser');
 
-exports.parserTest = {
+exports.completerTest = {
   "single word command": function (test) {
     var cmdparser = new CmdParser([
       "test"
     ]);
-    var results = cmdparser.parse("test");
-    test.equal(results.name, "test");
+    var results = cmdparser.completer("te");
+    test.equal(results, [
+      ["test"],
+      "te"
+    ]);
     test.done();
   },
-
+/*
   "single word command, no match": function (test) {
     var cmdparser = new CmdParser([
       "test"
@@ -159,4 +162,5 @@ exports.parserTest = {
     test.equal(results.params.param1, null);
     test.done();
   }
+  */
 };

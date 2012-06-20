@@ -51,23 +51,29 @@ function parseCommand(cmd) {
         }
         i++;
 
-        var subParts = paramName
-          .split(' ')
-          .map(function (name) {
-            if (name.indexOf('"') === 0) {
-              name = name.substring(1, name.length - 1);
-              return {
-                op: 'literal',
-                value: name
-              };
-            }
+        var subParts = paramName.split(' ');
+        var repeat = false;
+        if (subParts[subParts.length - 1] === '...') {
+          repeat = true;
+          subParts.splice(subParts.length - 1);
+        }
 
+        subParts = subParts.map(function (name) {
+          if (name.indexOf('"') === 0) {
+            name = name.substring(1, name.length - 1);
             return {
-              op: 'requiredParameter',
-              name: name
+              op: 'literal',
+              value: name
             };
-          });
+          }
+
+          return {
+            op: 'requiredParameter',
+            name: name
+          };
+        });
         parts.push({
+          repeat: repeat,
           op: 'optionalParameters',
           parts: subParts
         });
@@ -110,7 +116,7 @@ function parseCommand(cmd) {
       startStrIdx: 0,
       str: str,
       cmd: cmd,
-      debug: false,
+      debug: true,
       result: {
         name: null,
         params: {}
@@ -196,7 +202,7 @@ function parseAll(state, parts) {
   }
 
   if (state.debug) {
-    console.log('parseAll ok', state);
+    console.log('parseAll ok', JSON.stringify(state, null, '  '));
   }
   return state.result;
 }
@@ -235,7 +241,19 @@ function parseOptionalParameters(state, part) {
   if (state.debug) {
     console.log('parseOptionalParameters', state, part);
   }
-  parseAll(state, part.parts);
+  if (part.repeat) {
+    var saveResults = state.result;
+    state.result = {params: {}};
+    while (parseAll(state, part.parts)) {
+      if (state.debug) {
+        console.log('repeat', state);
+      }
+      mergeResultsAsArrays(saveResults, state.result);
+    }
+    state.result = saveResults;
+  } else {
+    parseAll(state, part.parts);
+  }
   return true;
 }
 
@@ -277,4 +295,17 @@ function parseOptionalParameterLiteralOr(state, part) {
     }
   }
   return result;
+}
+
+function mergeResultsAsArrays(dest, src) {
+  for (var key in src.params) {
+    var val = src.params[key];
+    if (dest.params[key] instanceof Array) {
+      dest.params[key].push(val);
+    } else if (dest.params[key]) {
+      dest.params[key] = [dest.params[key], val];
+    } else {
+      dest.params[key] = [val];
+    }
+  }
 }
