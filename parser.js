@@ -318,7 +318,7 @@ function parseCommandName(state, part, callback) {
     if (part.name.toLowerCase().indexOf(word.toLowerCase()) === 0 && isEndOfString(state)) {
       state.completer = {
         partial: word,
-        value: part.name
+        value: part.name + ' '
       };
     }
     if (state.parsing) {

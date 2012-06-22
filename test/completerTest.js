@@ -10,7 +10,7 @@ exports.completerTest = {
     cmdparser.completer("te", function (err, results) {
       test.equal(err, null);
       test.deepEqual(results, [
-        ["test"],
+        ["test "],
         "te"
       ]);
       test.done();
@@ -25,7 +25,7 @@ exports.completerTest = {
     cmdparser.completer("te", function (err, results) {
       test.equal(err, null);
       test.deepEqual(results, [
-        ["test1", "test2"],
+        ["test1 ", "test2 "],
         "te"
       ]);
       test.done();
