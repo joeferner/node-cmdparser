@@ -10,7 +10,7 @@
   "version": "0.0.2",
   "repository": {
     "type": "git",
-    "url": "git://github.com/joeferner/node-cmdparser.git"
+    "url": "git://github.com/nearinfinity/node-cmdparser.git"
   },
   "engines": {
     "node": "*"
