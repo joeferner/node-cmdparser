@@ -202,6 +202,17 @@ exports.redisTest = {
     });
   },
 
+  "ZRANGE completion": function (test) {
+    this.cmdparser.completer("ZRANGE ", function (err, results) {
+      test.equal(err, null);
+      test.deepEqual(results, [
+        [ 'user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4' ],
+        ''
+      ]);
+      test.done();
+    });
+  },
+
   "LINSERT completer": function (test) {
     this.cmdparser.completer("LINSERT user:1 ", function (err, results) {
       test.equal(err, null);
