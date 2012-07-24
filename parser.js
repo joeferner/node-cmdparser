@@ -206,9 +206,11 @@ function isWhitespace(ch) {
 }
 
 function skipWhitespace(state) {
+  var startStrIdx = state.strIdx;
   while (state.strIdx < state.str.length && isWhitespace(state.str[state.strIdx])) {
     state.strIdx++;
   }
+  return state.strIdx !== startStrIdx;
 }
 
 function readNextWord(state) {
@@ -249,6 +251,10 @@ function parseAll(state, parts, callback) {
   }
 
   async.forEachSeries(parts, function (part, callback) {
+    if (state.completer) {
+      return callback();
+    }
+
     if (part.op === 'commandName') {
       return parseCommandName(state, part, callback);
     }
@@ -286,14 +292,14 @@ function parseRequiredParameter(state, part, callback) {
     console.log('parseRequiredParameter', state, part);
   }
   var val = readNextWord(state);
-  if (val.length === 0) {
+  if (val.length === 0 && !state.completing) {
     return callback(null, false);
   }
 
   state.result.params[part.name] = val;
-  skipWhitespace(state);
+  var endsInSpace = skipWhitespace(state);
 
-  if (state.completers && state.completers[part.name]) {
+  if (!endsInSpace && state.completers && state.completers[part.name]) {
     state.completers[part.name](val, function (err, values) {
       if (err) {
         return callback(err);
