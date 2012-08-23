@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/nearinfinity/node-cmdparser.png)](http://travis-ci.org/nearinfinity/node-cmdparser)
 
 # cmdparser
 
