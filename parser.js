@@ -11,7 +11,7 @@ var CmdParser = module.exports = function (commands, completers) {
 
 CmdParser.prototype.parse = function (str, callback) {
   var matches = [];
-  async.forEach(this._commands, function (cmd, cb) {
+  async.each(this._commands, function (cmd, cb) {
     cmd.parse(str, function (err, r) {
       if (r) {
         matches.push(r);
@@ -35,7 +35,7 @@ CmdParser.prototype.parse = function (str, callback) {
 CmdParser.prototype.completer = function (str, callback) {
   var self = this;
   var matches = [];
-  async.forEach(this._commands, function (cmd, cb) {
+  async.each(this._commands, function (cmd, cb) {
     cmd.completer(str, self._completers, function (err, r) {
       if (r) {
         matches.push(r);
@@ -250,7 +250,7 @@ function parseAll(state, parts, callback) {
     console.log('parts', state.cmd, JSON.stringify(parts, null, '  '));
   }
 
-  async.forEachSeries(parts, function (part, callback) {
+  async.eachSeries(parts, function (part, callback) {
     if (state.completer) {
       return callback();
     }
@@ -346,7 +346,9 @@ function parseOptionalParameters(state, part, callback) {
     var saveResults = state.result;
     state.result = {params: {}};
     async.whilst(
-      function () { return !isEndOfString(state); },
+      function (cbt) {
+        cbt(null, !isEndOfString(state));
+        },
       function (cb) {
         parseAll(state, part.parts, function (err) {
           if (state.debug) {

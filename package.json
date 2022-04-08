@@ -13,10 +13,10 @@
     "url": "git://github.com/nearinfinity/node-cmdparser.git"
   },
   "engines": {
-    "node": "*"
+    "node": ">=4"
   },
   "dependencies": {
-    "async": "~0.1.22"
+    "async": "^3.2.3"
   },
   "devDependencies": {
     "mocha": "^9.2.2",
