@@ -1,50 +1,52 @@
 'use strict';
 
-var CmdParser = require('../parser');
+const CmdParser = require('../parser');
+const expect = require('chai').expect;
 
-exports.completerTest = {
-  "single word command": function (test) {
-    var cmdparser = new CmdParser([
+describe('completer tests', function() {
+
+  it('single word command', function (done) {
+    const cmdparser = new CmdParser([
       "test"
     ]);
     cmdparser.completer("te", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, [
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["test "],
         "te"
-      ]);
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "single word command, multiple matches": function (test) {
-    var cmdparser = new CmdParser([
+  it('single word command, multiple matches', function (done) {
+    const cmdparser = new CmdParser([
       "test1",
       "test2"
     ]);
     cmdparser.completer("te", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, [
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["test1 ", "test2 "],
         "te"
-      ]);
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "single word command, no match": function (test) {
-    var cmdparser = new CmdParser([
+  it('single word command, no match', function (done) {
+    const cmdparser = new CmdParser([
       "test"
     ]);
     cmdparser.completer("bad", function (err, results) {
-      test.equal(err, null);
-      test.equal(results, null);
-      test.done();
+      expect(err, 'no error returned').to.be.null;
+      expect(results, 'no command found by parser').to.be.undefined;
+      done();
     });
-  },
+  });
 
-  "one required parameter": function (test) {
-    var cmdparser = new CmdParser([
+  it('one required parameter', function (done) {
+    const cmdparser = new CmdParser([
       "test param1"
     ], {
       param1: function (partial, callback) {
@@ -54,26 +56,26 @@ exports.completerTest = {
       }
     });
     cmdparser.completer("test val", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, [
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["val1", "val2", "val3"],
         "val"
-      ]);
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "literal": function (test) {
-    var cmdparser = new CmdParser([
+  it('literal', function (done) {
+    const cmdparser = new CmdParser([
       "test [TEST]"
     ]);
     cmdparser.completer("test T", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, [
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["TEST"],
         "T"
-      ]);
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  }
-};
+  });
+});
