@@ -23,7 +23,7 @@ CmdParser.prototype.parse = function (str, callback) {
       return callback(err);
     }
     if (matches.length === 0) {
-      return callback();
+      return callback(null);
     }
     if (matches.length === 1) {
       return callback(null, matches[0]);
@@ -47,7 +47,7 @@ CmdParser.prototype.completer = function (str, callback) {
       return callback(err);
     }
     if (matches.length === 0) {
-      return callback();
+      return callback(null);
     }
     var bestPartial = matches[0].partial; // todo find a better way
     var results = [
