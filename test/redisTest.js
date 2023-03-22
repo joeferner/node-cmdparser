@@ -1,10 +1,11 @@
 'use strict';
 
-var CmdParser = require('../parser');
+const CmdParser = require('../parser');
+const expect = require('chai').expect;
 
-exports.redisTest = {
-  setUp: function (done) {
-    this.cmdparser = new CmdParser([
+describe('redis tests', function() {
+
+  const cmdparser = new CmdParser([
       "APPEND key value",
       "AUTH password",
       "BGREWRITEAOF",
@@ -149,98 +150,96 @@ exports.redisTest = {
       "ZUNIONSTORE destination numkeys key [key ...] [WEIGHTS weight [weight ...]] [AGGREGATE SUM|MIN|MAX]"
     ], {
       key: function (partial, callback) {
-        var r = ['user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4']
+        const r = ['user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4']
           .filter(function (item) { return item.toLowerCase().indexOf(partial.toLowerCase()) === 0; });
         callback(null, r);
       }
     });
-    done();
-  },
 
-  "DEL completer": function (test) {
-    this.cmdparser.completer("del user", function (err, results) {
-      test.deepEqual(results, [
+  it('DEL completer', function (done) {
+    cmdparser.completer("del user", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["user:1", "user:2"],
         "user"
-      ]);
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "CONFIG GET completer": function (test) {
-    this.cmdparser.completer("CONFIG GE", function (err, results) {
-      test.deepEqual(results, [
+  it('CONFIG GET completer', function (done) {
+    cmdparser.completer("CONFIG GE", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["GET"],
         "GE"
-      ]);
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "BLPOP completer": function (test) {
-    this.cmdparser.completer("BLPOP user", function (err, results) {
-      test.deepEqual(results, [
+  it('BLPOP completer', function (done) {
+    cmdparser.completer("BLPOP user", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["user:1", "user:2"],
         "user"
-      ]);
-
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "BLPOP parser": function (test) {
-    this.cmdparser.parse("BLPOP user:1 4", function (err, results) {
-      test.deepEqual(results, {
+  it('BLPOP parser', function (done) {
+    cmdparser.parse("BLPOP user:1 4", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal({
         name: 'BLPOP',
         params: {
           key: 'user:1',
           timeout: 4
         }
-      });
-
-      test.done();
+      }, 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "ZRANGE completion": function (test) {
-    this.cmdparser.completer("ZRANGE ", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, [
+  it('ZRANGE completion', function (done) {
+    cmdparser.completer("ZRANGE ", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         [ 'user:1', 'user:2', 'item:1', 'item:2', 'item:3', 'item:4' ],
         ''
-      ]);
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "LINSERT completer": function (test) {
-    this.cmdparser.completer("LINSERT user:1 ", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, [
+  it('LINSERT completer', function (done) {
+    cmdparser.completer("LINSERT user:1 ", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["BEFORE", "AFTER"],
         ""
-      ]);
-
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "LINSERT completer hint": function (test) {
-    this.cmdparser.completer("LINSERT user:1 B", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, [
+  it('LINSERT completer hint', function (done) {
+    cmdparser.completer("LINSERT user:1 B", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal([
         ["BEFORE"],
         "B"
-      ]);
-
-      test.done();
+      ], 'command was parsed');
+      done();
     });
-  },
+  });
 
-  "LINSERT parser": function (test) {
-    this.cmdparser.parse("LINSERT user:1 BEFORE a b", function (err, results) {
-      test.equal(err, null);
-      test.deepEqual(results, {
+  it('LINSERT parser', function (done) {
+    cmdparser.parse("LINSERT user:1 BEFORE a b", function (err, results) {
+      expect(err, 'no error returned').to.be.null;
+      expect(results).to.deep.equal({
         name: 'LINSERT',
         params: {
           key: 'user:1',
@@ -249,9 +248,8 @@ exports.redisTest = {
           pivot: 'a',
           value: 'b'
         }
-      });
-
-      test.done();
+      }, 'command was parsed');
+      done();
     });
-  }
-};
+  });
+});

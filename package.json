@@ -13,16 +13,17 @@
     "url": "git://github.com/nearinfinity/node-cmdparser.git"
   },
   "engines": {
-    "node": "*"
+    "node": ">=4"
   },
   "dependencies": {
-    "async": "~0.1.22"
+    "async": "^3.2.3"
   },
   "devDependencies": {
-    "nodeunit": "~0.7.4"
+    "mocha": "^9.2.2",
+    "chai": "^4.3.6"
   },
   "scripts": {
-    "test": "./node_modules/nodeunit/bin/nodeunit test"
+    "test": "mocha test"
   },
   "main": "./parser.js"
 }
